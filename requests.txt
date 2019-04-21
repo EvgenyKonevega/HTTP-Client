@@ -1,0 +1,9 @@
+127.0.0.1/welcome
+Params:{
+	user = Polinka;
+	id = 112858265069;
+}
+
+127.0.0.1/welcome1 
+
+127.0.0.1/welcome2 
