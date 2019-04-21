@@ -1,0 +1,41 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+        version="3.1">
+  <display-name>Archetype Created Web Application</display-name>
+
+  <servlet>
+    <servlet-name>Post</servlet-name>
+    <servlet-class>myServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>Post</servlet-name>
+    <url-pattern>/welcome</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>Get</servlet-name>
+    <servlet-class>Get</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>Get</servlet-name>
+    <url-pattern>/welcome1</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>Head</servlet-name>
+    <servlet-class>Head</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>Head</servlet-name>
+    <url-pattern>/welcome2</url-pattern>
+  </servlet-mapping>
+
+</web-app>
