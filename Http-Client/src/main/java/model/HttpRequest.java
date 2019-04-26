@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
 import exception.BsuirException;
 
 /**
- * This class represents http-request model (класс, предоставляющий модель http запроса).
+ * This class represents http-request model (пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ http пїЅпїЅпїЅпїЅпїЅпїЅпїЅ).
  *
  * @author Yuzvenko Polina and Konevega Evgeny
  */
@@ -65,7 +65,7 @@ public class HttpRequest {
 		requestFields.put("Port8080", "8080");
 		requestFields.put("Port80", "80");
 		requestFields.put("Connection", "Keep-Alive");
-		requestFields.put("User-Agent", "Chrome/73.0.3683.86 (Windows 10 Pro 10.0.17134)");
+		//requestFields.put("User-Agent", "Chrome/73.0.3683.86 (Windows 10 Pro 10.0.17134)");
 		//requestFields.put("Connection", "close");
 
 		return requestFields;
@@ -169,13 +169,15 @@ public class HttpRequest {
 		String space = ": ";
 		ArrayList<String> params = new ArrayList<String>();
 		ArrayList<String> paramValues = new ArrayList<String>();
-		request = String.format("%s%s%s%s", requestFields.get("Method"), " ", requestFields.get("URL"), newLine);
+		request = requestFields.get("Method") + " " + requestFields.get("URL") + "\r\n";
+//		request = String.format("%s%s%s%s", requestFields.get("Method"), " ", requestFields.get("URL"), "\r\n");
 		try {
 			for (int i = 0; i < keys.size(); i++) {
 				String key = keys.get(i);
 				if (key.equals("Host")) {
-					request = String.format("%s%s", request, String.format("%s%s%s%s%s%s", key, space,
-							requestFields.get(key), ":", getPort()/*requestFields.get("Port8080")*/, newLine));
+					request += key + space + requestFields.get(key) + ":" + getPort() + "\r\n";
+//					request = String.format("%s%s", request, String.format("%s%s%s%s%s%s", key, space,
+//							requestFields.get(key), ":", getPort(), "\r\n"));
 				} else if (key.split(":")[0].equals("Param")) {
 					params.add(key.split(":")[1]);
 					paramValues.add(requestFields.get(key));
@@ -184,34 +186,41 @@ public class HttpRequest {
 					if (method == "POST") {
 						if (!key.equals("Accept") && !key.equals("Referer") && !key.equals("Accept-Encoding")
 								&& !key.equals("Accept-Language")) {
-							request = String.format("%s%s", request,
-									String.format("%s%s%s%s", key, space, requestFields.get(key), newLine));
+							request += key + space + requestFields.get(key) + "\r\n";
+//							request = String.format("%s%s", request,
+//									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
 						}
 					}else if(method == "HEAD") {
 						if(!key.equals("Referer") && !key.equals("Accept-Encoding")
 								&& !key.equals("Accept-Language") && !key.equals("Content-Length")) {
-							request = String.format("%s%s", request,
-									String.format("%s%s%s%s", key, space, requestFields.get(key), newLine));
+							request += key + space + requestFields.get(key) + "\r\n";
+//							request = String.format("%s%s", request,
+//									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
 						}
 					}else {
 						if (!key.equals("Content-Length") && !key.equals("Content-Type") && !key.equals("Param:user") && !key.equals("Param:id")) {
-						request = String.format("%s%s", request,
-								String.format("%s%s%s%s", key, space, requestFields.get(key), newLine));
+							request += key + space + requestFields.get(key) + "\r\n";
+// 							request = String.format("%s%s", request,
+//									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
 						}
 					}
 				}
 			}
-            //if(method.equals("POST")) {
+            if(method.equals("POST")) {
                 for (int i = 0; i < params.size(); i++) {
                     if (i == 0) {
-                        request = String.format("%s%s%s", request, newLine, URLEncoder.encode(params.get(i), "UTF-8") + "="
-                                + URLEncoder.encode(paramValues.get(i), "UTF-8"));
+                    	request += "\n" + URLEncoder.encode(params.get(i), "UTF-8") + "="
+								+ URLEncoder.encode(paramValues.get(i), "UTF-8");
+//                        request = String.format("%s%s%s", request, "\n", URLEncoder.encode(params.get(i), "UTF-8") + "="
+//                                + URLEncoder.encode(paramValues.get(i), "UTF-8"));
                     } else {
-                        request = String.format("%s%s", request, "&" + URLEncoder.encode(params.get(i), "UTF-8") + "="
-                                + URLEncoder.encode(paramValues.get(i), "UTF-8"));
+                    	request += "&" + URLEncoder.encode(params.get(i), "UTF-8") + "="
+								+ URLEncoder.encode(paramValues.get(i), "UTF-8");
+//                        request = String.format("%s%s", request, "&" + URLEncoder.encode(params.get(i), "UTF-8") + "="
+//                                + URLEncoder.encode(paramValues.get(i), "UTF-8"));
                     }
                 }
-            //}
+            }
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
