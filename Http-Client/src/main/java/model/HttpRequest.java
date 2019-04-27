@@ -55,9 +55,8 @@ public class HttpRequest {
 		requestFields.put("Method", "");
 		requestFields.put("URL", "");
 		requestFields.put("Host", "");
-		requestFields.put("Referer", "");
-		requestFields.put("Accept",
-				"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+		requestFields.put("Accept", "*/*");
+        requestFields.put("Cache-Control", "no-cache");
 		requestFields.put("Accept-Encoding", "gzip, deflate");
 		requestFields.put("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
 		requestFields.put("Content-Type", "application/x-www-form-urlencoded");
@@ -65,7 +64,7 @@ public class HttpRequest {
 		requestFields.put("Port8080", "8080");
 		requestFields.put("Port80", "80");
 		requestFields.put("Connection", "Keep-Alive");
-		//requestFields.put("User-Agent", "Chrome/73.0.3683.86 (Windows 10 Pro 10.0.17134)");
+		requestFields.put("User-Agent", "Chrome/73.0.3683.86 (Windows 10 Pro 10.0.17134)");
 		//requestFields.put("Connection", "close");
 
 		return requestFields;
@@ -99,15 +98,19 @@ public class HttpRequest {
 			//System.out.println("request[0] " + url);
 			requestFields.put("Method", method);
 			requestFields.put("URL", url);
-			requestFields.put("Referer", url);
 			if (method != "POST") {
 				if (url.contains("http")) {
 					String host = newRequest.substring(newRequest.indexOf("//") + 2, newRequest.length());
 					host = host.substring(0, host.indexOf("/"));
 					requestFields.put("Host", host);
 				} else if(url.startsWith("1")) {
+				    if (newRequest.contains("/")){
 					requestFields.put("Host", newRequest.substring(0, newRequest.indexOf("/")));
-					requestFields.put("URL", url.substring(url.indexOf("/"), url.length()));
+					requestFields.put("URL", url.substring(url.indexOf("/"), url.length()));}
+					else {
+                        requestFields.put("Host", newRequest.substring(0, newRequest.indexOf(":")));
+                        requestFields.put("URL", "/");
+					}
 				} else {
 					requestFields.put("Host", newRequest.substring(0, newRequest.indexOf("/")));
 					requestFields.put("URL", "http://"+url);
@@ -120,12 +123,19 @@ public class HttpRequest {
 
 			int st = url.indexOf(":");
 			int end = url.indexOf("/");
-			System.out.println("comon"+ st+end);
+
 			if ((end - st > 1) && (st > -1)){
 				String usPort = url.substring(st+1, end);
 				userPort = true;
 				usPortVal = usPort;
+
 			}
+
+            if (url.contains("8080")) {
+                userPort = true;
+                usPortVal = "8080";
+
+            }
 
 			if (method == "POST") {
 				int len = 0;
@@ -165,17 +175,17 @@ public class HttpRequest {
 //			System.out.println("key: " + keys.get(i) + " value: " + requestFields.get(keys.get(i)));
 //		}
 
-		String newLine = "\n";
+		String newLine = "\r\n";
 		String space = ": ";
 		ArrayList<String> params = new ArrayList<String>();
 		ArrayList<String> paramValues = new ArrayList<String>();
-		request = requestFields.get("Method") + " " + requestFields.get("URL") + "\r\n";
+		request = requestFields.get("Method") + " " + requestFields.get("URL") + " HTTP/1.1" + newLine;
 //		request = String.format("%s%s%s%s", requestFields.get("Method"), " ", requestFields.get("URL"), "\r\n");
 		try {
 			for (int i = 0; i < keys.size(); i++) {
 				String key = keys.get(i);
 				if (key.equals("Host")) {
-					request += key + space + requestFields.get(key) + ":" + getPort() + "\r\n";
+					request += key + space + requestFields.get(key) + ":" + getPort() + newLine;
 //					request = String.format("%s%s", request, String.format("%s%s%s%s%s%s", key, space,
 //							requestFields.get(key), ":", getPort(), "\r\n"));
 				} else if (key.split(":")[0].equals("Param")) {
@@ -184,22 +194,20 @@ public class HttpRequest {
 				} else if (!key.equals("Method") && !key.equals("URL") && !key.equals("Port80")
 						&& !key.equals("Port8080")) {
 					if (method == "POST") {
-						if (!key.equals("Accept") && !key.equals("Referer") && !key.equals("Accept-Encoding")
-								&& !key.equals("Accept-Language")) {
-							request += key + space + requestFields.get(key) + "\r\n";
+						if (!key.equals("Accept") && !key.equals("Accept-Encoding") && !key.equals("Accept-Language")) {
+							request += key + space + requestFields.get(key) + newLine;
 //							request = String.format("%s%s", request,
 //									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
 						}
 					}else if(method == "HEAD") {
-						if(!key.equals("Referer") && !key.equals("Accept-Encoding")
-								&& !key.equals("Accept-Language") && !key.equals("Content-Length")) {
-							request += key + space + requestFields.get(key) + "\r\n";
+						if(!key.equals("Accept-Encoding") 	&& !key.equals("Accept-Language") && !key.equals("Content-Length")) {
+							request += key + space + requestFields.get(key) + newLine;
 //							request = String.format("%s%s", request,
 //									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
 						}
 					}else {
-						if (!key.equals("Content-Length") && !key.equals("Content-Type") && !key.equals("Param:user") && !key.equals("Param:id")) {
-							request += key + space + requestFields.get(key) + "\r\n";
+						if (!key.equals("Content-Length") && !key.equals("Param:user") && !key.equals("Param:id")) {
+							request += key + space + requestFields.get(key) + newLine;
 // 							request = String.format("%s%s", request,
 //									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
 						}
@@ -209,7 +217,7 @@ public class HttpRequest {
             if(method.equals("POST")) {
                 for (int i = 0; i < params.size(); i++) {
                     if (i == 0) {
-                    	request += "\n" + URLEncoder.encode(params.get(i), "UTF-8") + "="
+                    	request += newLine + URLEncoder.encode(params.get(i), "UTF-8") + "="
 								+ URLEncoder.encode(paramValues.get(i), "UTF-8");
 //                        request = String.format("%s%s%s", request, "\n", URLEncoder.encode(params.get(i), "UTF-8") + "="
 //                                + URLEncoder.encode(paramValues.get(i), "UTF-8"));
