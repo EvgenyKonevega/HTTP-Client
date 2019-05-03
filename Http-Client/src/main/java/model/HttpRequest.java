@@ -19,17 +19,16 @@ import org.apache.logging.log4j.Logger;
 import exception.BsuirException;
 
 /**
- * This class represents http-request model (�����, ��������������� ������ http �������).
+ * This class represents http-request model (�����, ��������������� ������ http
+ * �������).
  *
  * @author Yuzvenko Polina and Konevega Evgeny
  */
 public class HttpRequest {
-
 	/**
 	 * Logger for logging.
 	 */
 	private static Logger lOGGER = LogManager.getLogger(HttpRequest.class.getName());
-
 	/**
 	 * Default request value.
 	 */
@@ -38,39 +37,27 @@ public class HttpRequest {
 	 * List for request parameters.
 	 **/
 	private List<Field> fields = new ArrayList<>();
-
+	private String Method = "";
+	private String URL = "";
+	private String Host = "";
+	private String Referer = "";
+	private String ContentLength = "";
+	private String AcceptEncoding = "gzip, deflate";
+	private String AcceptLanguage = "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7";
+	private String Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8";
+	private String ContentType = "application/x-www-form-urlencoded";
+	private String Connection = "Keep-Alive";
+	private String Port = "8080";
+	private String UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36";
 	/**
 	 * Map for request parameters.
 	 **/
 	private Map<String, String> requestFields = createMap();
 
-	public Map<String, String> getRequestFields() {
-		return requestFields;
-	}
-	private boolean userPort = false;
-	public String usPortVal = "";
-
 	private static Map<String, String> createMap() {
 		Map<String, String> requestFields = new HashMap<String, String>();
-		requestFields.put("Method", "");
-		requestFields.put("URL", "");
-		requestFields.put("Host", "");
-		requestFields.put("Accept", "*/*");
-        requestFields.put("Cache-Control", "no-cache");
-		requestFields.put("Accept-Encoding", "gzip, deflate");
-		requestFields.put("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
-		requestFields.put("Content-Type", "application/x-www-form-urlencoded");
-		requestFields.put("Content-Length", "");
-		requestFields.put("Port8080", "8080");
-		requestFields.put("Port80", "80");
-		requestFields.put("Connection", "Keep-Alive");
-		requestFields.put("User-Agent", "Chrome/73.0.3683.86 (Windows 10 Pro 10.0.17134)");
-		//requestFields.put("Connection", "close");
-
 		return requestFields;
 	}
-
-	//public Map<String, String> getMap(){}
 
 	/**
 	 * Public model constructor.
@@ -84,6 +71,20 @@ public class HttpRequest {
 		}
 	}
 
+	// 127.0.0.1:8080/testServer/welcome1
+	private void getAndHead(String text) {
+		Port = Utils.findPort(text);
+		Referer = text;
+		if(text.contains("/")) {
+		URL = text.substring(text.indexOf("/"), text.length()); // for 127.0.0.1:8080/testServer/welcome1
+		} else { URL = "/"; }
+		if (text.contains(":")) {
+			Host = text.substring(0, text.indexOf(":"));
+		} else {
+			Host = text.substring(0, text.indexOf("/"));
+		}
+	}
+
 	/**
 	 * Method set new http-request text.
 	 *
@@ -94,48 +95,9 @@ public class HttpRequest {
 	public void setNewRequest(String newRequest, String method) throws BsuirException {
 		try {
 			String[] request = newRequest.split("\n");
-			String url = request[0];
-			//System.out.println("request[0] " + url);
-			requestFields.put("Method", method);
-			requestFields.put("URL", url);
-			if (method != "POST") {
-				if (url.contains("http")) {
-					String host = newRequest.substring(newRequest.indexOf("//") + 2, newRequest.length());
-					host = host.substring(0, host.indexOf("/"));
-					requestFields.put("Host", host);
-				} else if(url.startsWith("1")) {
-				    if (newRequest.contains("/")){
-					requestFields.put("Host", newRequest.substring(0, newRequest.indexOf("/")));
-					requestFields.put("URL", url.substring(url.indexOf("/"), url.length()));}
-					else {
-                        requestFields.put("Host", newRequest.substring(0, newRequest.indexOf(":")));
-                        requestFields.put("URL", "/");
-					}
-				} else {
-					requestFields.put("Host", newRequest.substring(0, newRequest.indexOf("/")));
-					requestFields.put("URL", "http://"+url);
-				}
-				
-			} else {
-				requestFields.put("Host", url.substring(0, url.indexOf("/")));
-				requestFields.put("URL", url.substring(url.indexOf("/"), url.length()));
-			}
-
-			int st = url.indexOf(":");
-			int end = url.indexOf("/");
-
-			if ((end - st > 1) && (st > -1)){
-				String usPort = url.substring(st+1, end);
-				userPort = true;
-				usPortVal = usPort;
-
-			}
-
-            if (url.contains("8080")) {
-                userPort = true;
-                usPortVal = "8080";
-
-            }
+			Method = method;
+			Referer = request[0];
+			getAndHead(request[0]);
 
 			if (method == "POST") {
 				int len = 0;
@@ -151,7 +113,7 @@ public class HttpRequest {
 						}
 					}
 				}
-				requestFields.put("Content-Length", String.valueOf(len + 1));
+				ContentLength = String.valueOf(len + 1);
 			}
 
 		} catch (IllegalArgumentException e) {
@@ -169,105 +131,98 @@ public class HttpRequest {
 	 */
 	public String request(String text, String method) throws BsuirException {
 		setNewRequest(text, method);
-
 		List<String> keys = new ArrayList<String>(requestFields.keySet());
-//		for (int i = 0; i < keys.size(); i++) {
-//			System.out.println("key: " + keys.get(i) + " value: " + requestFields.get(keys.get(i)));
-//		}
-
-		String newLine = "\r\n";
-		String space = ": ";
 		ArrayList<String> params = new ArrayList<String>();
 		ArrayList<String> paramValues = new ArrayList<String>();
-		request = requestFields.get("Method") + " " + requestFields.get("URL") + " HTTP/1.1" + newLine;
-//		request = String.format("%s%s%s%s", requestFields.get("Method"), " ", requestFields.get("URL"), "\r\n");
-		try {
-			for (int i = 0; i < keys.size(); i++) {
-				String key = keys.get(i);
-				if (key.equals("Host")) {
-					request += key + space + requestFields.get(key) + ":" + getPort() + newLine;
-//					request = String.format("%s%s", request, String.format("%s%s%s%s%s%s", key, space,
-//							requestFields.get(key), ":", getPort(), "\r\n"));
-				} else if (key.split(":")[0].equals("Param")) {
-					params.add(key.split(":")[1]);
-					paramValues.add(requestFields.get(key));
-				} else if (!key.equals("Method") && !key.equals("URL") && !key.equals("Port80")
-						&& !key.equals("Port8080")) {
-					if (method == "POST") {
-						if (!key.equals("Accept") && !key.equals("Accept-Encoding") && !key.equals("Accept-Language")) {
-							request += key + space + requestFields.get(key) + newLine;
-//							request = String.format("%s%s", request,
-//									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
-						}
-					}else if(method == "HEAD") {
-						if(!key.equals("Accept-Encoding") 	&& !key.equals("Accept-Language") && !key.equals("Content-Length")) {
-							request += key + space + requestFields.get(key) + newLine;
-//							request = String.format("%s%s", request,
-//									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
-						}
-					}else {
-						if (!key.equals("Content-Length") && !key.equals("Param:user") && !key.equals("Param:id")) {
-							request += key + space + requestFields.get(key) + newLine;
-// 							request = String.format("%s%s", request,
-//									String.format("%s%s%s%s", key, space, requestFields.get(key), "\r\n"));
-						}
-					}
+
+		if (Method == "GET") {
+			request = setGetRequest();
+		} else if (Method == "HEAD") {
+			request = setHeadRequest();
+		} else {
+			request = setPostRequest(keys, params, paramValues);
+		}
+
+		return request;
+	}
+
+	private String setGetRequest() {
+		request = Method + " " + URL + " HTTP/1.1\r\n";
+		request += "Host: " + Host + ":" + Port + "\r\n";
+		request += "Referer: " + Referer + "\r\n";
+		request += "Accept: " + Accept + "\r\n";
+		request += "Accept-Encoding: " + AcceptEncoding + "\r\n";
+		request += "Accept-Language: " + AcceptLanguage + "\r\n";
+		request += "Connection: " + Connection + "\r\n";
+		request += "User-Agent: " + UserAgent + "\r\n";
+
+		return request;
+	}
+
+	private String setHeadRequest() {
+		request = Method + " " + URL + " HTTP/1.1\r\n";
+		request += "Host: " + Host + ":" + Port + "\r\n";
+		request += "Referer: " + Referer + "\r\n";
+		request += "Accept: " + Accept + "\r\n";
+		request += "Accept-Encoding: " + AcceptEncoding + "\r\n";
+		request += "Accept-Language: " + AcceptLanguage + "\r\n";
+		request += "Connection: " + Connection + "\r\n";
+		request += "User-Agent: " + UserAgent + "\r\n";
+
+		return request;
+	}
+
+	private String setPostRequest(List<String> keys, ArrayList<String> params, ArrayList<String> paramValues) {
+		request = Method + " " + URL + " HTTP/1.1\r\n";
+		request += "Host: " + Host + ":" + Port + "\r\n";
+		request += "Content-Length: " + ContentLength + "\r\n";
+		request += "Content-Type: " + ContentType + "\r\n";
+		request += "Connection: " + Connection + "\r\n";
+
+		for (int i = 0; i < keys.size(); i++) {
+			String key = keys.get(i);
+			if (key.split(":")[0].equals("Param")) {
+				params.add(key.split(":")[1]);
+				paramValues.add(requestFields.get(key));
+			}
+		}
+
+		for (int i = 0; i < params.size(); i++) {
+			if (i == 0) {
+				try {
+					request += "\r\n" + URLEncoder.encode(params.get(i), "UTF-8") + "="
+							+ URLEncoder.encode(paramValues.get(i), "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+			} else {
+				try {
+					request += "&" + URLEncoder.encode(params.get(i), "UTF-8") + "="
+							+ URLEncoder.encode(paramValues.get(i), "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
 				}
 			}
-            if(method.equals("POST")) {
-                for (int i = 0; i < params.size(); i++) {
-                    if (i == 0) {
-                    	request += newLine + URLEncoder.encode(params.get(i), "UTF-8") + "="
-								+ URLEncoder.encode(paramValues.get(i), "UTF-8");
-//                        request = String.format("%s%s%s", request, "\n", URLEncoder.encode(params.get(i), "UTF-8") + "="
-//                                + URLEncoder.encode(paramValues.get(i), "UTF-8"));
-                    } else {
-                    	request += "&" + URLEncoder.encode(params.get(i), "UTF-8") + "="
-								+ URLEncoder.encode(paramValues.get(i), "UTF-8");
-//                        request = String.format("%s%s", request, "&" + URLEncoder.encode(params.get(i), "UTF-8") + "="
-//                                + URLEncoder.encode(paramValues.get(i), "UTF-8"));
-                    }
-                }
-            }
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
 		}
-		//System.out.println(request);
+
 		return request;
 	}
 
 	public String testFunc(String text, HttpRequest httpRequest)
 			throws IllegalArgumentException, IllegalAccessException {
-		String result;
+		String result = "";
 		for (int index = 0; index < fields.size(); index++) {
 			if (fields.get(index).getName().equals(text)) {
 				result = (String) fields.get(index).get(httpRequest);
 			}
 		}
-		return text;
+		return result;
 	}
 
-	/**
-	 *
-	 * @return port
-	 */
 	public String getPort() {
-
-		if (requestFields.get("Host").equals("127.0.0.1")) {
-			if (userPort){
-				return usPortVal;
-			} else return requestFields.get("Port8080");
-		} else {
-			if (userPort){
-				return usPortVal;
-			} else return requestFields.get("Port80");
-		}
+		return Port;
 	}
 
-	/**
-	 *
-	 * @return host
-	 */
 	public String getHost() {
 		return requestFields.get("Host");
 	}

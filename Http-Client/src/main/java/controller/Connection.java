@@ -1,8 +1,13 @@
 package controller;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,57 +17,51 @@ import model.HttpRequest;
 
 public class Connection {
 
-    private final String fileName = "communicationProtocol.txt";
+	private final String fileName = "communicationProtocol.txt";
 
 	final Logger lOGGER = LogManager.getLogger(Connection.class.getName());
+	private Socket socket;
+	private PrintWriter writer;
+	private BufferedReader reader;
 
 	public String connection(String method, HttpRequest httpRequest, String requesttext) throws BsuirException {
-		//System.out.println(method + " \n" +requesttext);
 		String result = httpRequest.request(requesttext, method);
 		System.out.println("____");
-		
 		System.out.println(result);
-		Socket socket = null;
-		StringBuilder serverAnswer = new StringBuilder();
+		System.out.println("____");
+		StringBuilder response = new StringBuilder();
 		try {
-            File file = new File(fileName);
-            if(!file.exists()){
-                file.createNewFile();
-            }
-
-            FileWriter writer = new FileWriter(file, true);
-            BufferedWriter bufferWriter = new BufferedWriter(writer);
-            //String out = result;
-            //System.out.println(method);
-            /*if(!method.equals("POST")){
-                out = "";
-                String[] request = result.split("\n");
-                for(int i=0; i<request.length-2; i++){
-                    out += request[i] + "\n";
-                }
-                System.out.println("________________________________");
-                System.out.println(out);
-            }*/
-            bufferWriter.write(result + "\n");
-            //
-//            PrintWriter out = new PrintWriter(file.getAbsoluteFile());
-//            out.print(result);
-//            out.close();
+			File file = new File(fileName);
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			FileWriter fwriter = new FileWriter(file, true);
+			BufferedWriter bufferWriter = new BufferedWriter(fwriter);
+			bufferWriter.write(result + "\n");
 
 			socket = new Socket(httpRequest.getHost(), Integer.parseInt(httpRequest.getPort()));
-			socket.getOutputStream().write(result.getBytes());
-			Scanner scanner = new Scanner(socket.getInputStream());
-			while (scanner.hasNextLine()) {
-				serverAnswer.append(new String(scanner.nextLine().getBytes(), "utf-8"));
-				serverAnswer.append(new String("\n"));
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			writer = new PrintWriter(socket.getOutputStream(), true);
+
+			if (socket == null) {
+				throw new BsuirException("no internet connection");
 			}
+
+			writer.println(result);
+			writer.flush();
+			String str;
+			while ((str = reader.readLine()) != null) {
+				response.append(str + "\n");
+			}
+
+			writer.close();
+			reader.close();
 			socket.close();
 
-            bufferWriter.write("Response: \n "+ serverAnswer.toString() + "\n");
-            bufferWriter.close();
+			bufferWriter.write("Response: \n " + response.toString() + "\n");
+			bufferWriter.close();
 
 			lOGGER.info("answer read successfuly");
-
 
 		} catch (IOException e) {
 			lOGGER.debug("Exception in connection class");
@@ -70,10 +69,9 @@ public class Connection {
 			throw new BsuirException("B suirIOException" + e);
 		}
 		lOGGER.info("answer read successfuly");
-        System.out.println("________");
-        System.out.println(serverAnswer.toString());
+		System.out.println("________");
+		System.out.println("response \n" + response.toString());
 
-		return serverAnswer.toString();
+		return response.toString();
 	}
-
 }

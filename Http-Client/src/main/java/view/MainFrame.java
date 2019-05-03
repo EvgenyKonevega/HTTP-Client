@@ -90,7 +90,7 @@ public class MainFrame {
             public void actionPerformed(ActionEvent event) {
 
                 try {
-                    memo.setText(connection.connection(group.getSelection().getActionCommand(), request, memo.getText()));
+                   /* memo.setText(*/connection.connection(group.getSelection().getActionCommand(), request, memo.getText());//);
                 } catch (BsuirException | IllegalArgumentException e) {
                     lOGGER.debug("IllegalAccessException | InterruptedException | IOException | IllegalArgumentException | ParseException in connection");
                     e.printStackTrace();
