@@ -24,54 +24,54 @@ public class Connection {
 	private PrintWriter writer;
 	private BufferedReader reader;
 
-	public String connection(String method, HttpRequest httpRequest, String requesttext) throws BsuirException {
-		String result = httpRequest.request(requesttext, method);
-		System.out.println("____");
-		System.out.println(result);
-		System.out.println("____");
-		StringBuilder response = new StringBuilder();
-		try {
-			File file = new File(fileName);
-			if (!file.exists()) {
-				file.createNewFile();
-			}
-			FileWriter fwriter = new FileWriter(file, true);
-			BufferedWriter bufferWriter = new BufferedWriter(fwriter);
-			bufferWriter.write(result + "\n");
+	public String connection(String method, String params, HttpRequest httpRequest, String requesttext) throws BsuirException {
+        String result = httpRequest.request(requesttext, params, method);
+        System.out.println("____");
+        System.out.println(result);
+        System.out.println("____");
+        StringBuilder response = new StringBuilder();
+        try {
+            File file = new File(fileName);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fwriter = new FileWriter(file, true);
+            BufferedWriter bufferWriter = new BufferedWriter(fwriter);
+            bufferWriter.write(result + "\n");
 
-			socket = new Socket(httpRequest.getHost(), Integer.parseInt(httpRequest.getPort()));
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			writer = new PrintWriter(socket.getOutputStream(), true);
+            socket = new Socket(httpRequest.getHost(), Integer.parseInt(httpRequest.getPort()));
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            writer = new PrintWriter(socket.getOutputStream(), true);
 
-			if (socket == null) {
-				throw new BsuirException("no internet connection");
-			}
+            if (socket == null) {
+                throw new BsuirException("no internet connection");
+            }
 
-			writer.println(result);
-			writer.flush();
-			String str;
-			while ((str = reader.readLine()) != null) {
-				response.append(str + "\n");
-			}
+            writer.println(result);
+            writer.flush();
+            String str;
+            while ((str = reader.readLine()) != null) {
+                response.append(str + "\n");
+            }
 
-			writer.close();
-			reader.close();
-			socket.close();
+            writer.close();
+            reader.close();
+            socket.close();
 
-			bufferWriter.write("Response: \n " + response.toString() + "\n");
-			bufferWriter.close();
+            bufferWriter.write("Response: \n " + response.toString() + "\n");
+            bufferWriter.close();
 
-			lOGGER.info("answer read successfuly");
+            lOGGER.info("answer read successfuly");
 
-		} catch (IOException e) {
-			lOGGER.debug("Exception in connection class");
-			e.printStackTrace();
-			throw new BsuirException("B suirIOException" + e);
-		}
-		lOGGER.info("answer read successfuly");
-		System.out.println("________");
-		System.out.println("response \n" + response.toString());
+        } catch (IOException e) {
+            lOGGER.debug("Exception in connection class");
+            e.printStackTrace();
+            throw new BsuirException("B suirIOException" + e);
+        }
+        lOGGER.info("answer read successfuly");
+        System.out.println("________");
+        System.out.println("response \n" + response.toString());
 
-		return response.toString();
+        return response.toString();
 	}
 }

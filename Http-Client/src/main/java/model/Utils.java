@@ -8,6 +8,7 @@ public class Utils {
 
 	public static String findPort(String text) {
 		String result = "8080";
+
 		int st = text.indexOf(":");
 		int end = text.indexOf("/");
 		if (text.startsWith("1") && text.contains(":")) {
@@ -18,12 +19,8 @@ public class Utils {
 			result = "8080";
 		}
 
-		if (text.contains("http")) {
-			if ((end - st > 1) && (st > -1)) {
-				result = text.substring(st + 1, end);
-			} else {
-				result = "80";
-			}
+		if (text.contains("localhost")) {
+			result = "8080";
 		}
 		System.out.println("port " + result);
 		return result;
